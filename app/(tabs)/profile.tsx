@@ -1,7 +1,9 @@
+// app/profile.tsx
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, TextInput, TouchableOpacity, Image, ScrollView, Alert } from 'react-native';
+import { StyleSheet, Text, View, TextInput, TouchableOpacity, ScrollView, Alert } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useTheme } from '../../context/ThemeContext';
 
 // Profil için tip tanımı
 type UserProfile = {
@@ -11,7 +13,6 @@ type UserProfile = {
   address: string;
   preferences: {
     notifications: boolean;
-    darkMode: boolean;
   };
 };
 
@@ -26,12 +27,12 @@ const defaultProfile: UserProfile = {
   address: '',
   preferences: {
     notifications: true,
-    darkMode: false,
   },
 };
 
 export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
+  const { theme, isDark, toggleTheme } = useTheme();
   const [profile, setProfile] = useState<UserProfile>(defaultProfile);
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -65,90 +66,160 @@ export default function ProfileScreen() {
     }
   };
 
-  const togglePreference = (preference: 'notifications' | 'darkMode') => {
+  const toggleNotifications = () => {
     setProfile({
       ...profile,
       preferences: {
         ...profile.preferences,
-        [preference]: !profile.preferences[preference],
+        notifications: !profile.preferences.notifications,
       },
     });
   };
 
   if (isLoading) {
     return (
-      <View style={[styles.container, styles.centered]}>
-        <Text>Yükleniyor...</Text>
+      <View style={[
+        styles.container, 
+        styles.centered,
+        { backgroundColor: theme.background }
+      ]}>
+        <Text style={{ color: theme.text }}>Yükleniyor...</Text>
       </View>
     );
   }
 
+  // Dinamik stiller oluşturalım
+  const dynamicStyles = {
+    container: {
+      backgroundColor: theme.background,
+    },
+    profileHeader: {
+      backgroundColor: theme.card,
+    },
+    profileName: {
+      color: theme.text,
+    },
+    section: {
+      backgroundColor: theme.card,
+      borderColor: theme.border,
+    },
+    sectionTitle: {
+      color: theme.text,
+    },
+    inputLabel: {
+      color: theme.secondaryText,
+    },
+    input: {
+      backgroundColor: theme.inputBackground,
+      borderColor: theme.border,
+      color: theme.inputText,
+    },
+    inputDisabled: {
+      backgroundColor: theme.inputDisabled,
+      color: theme.secondaryText,
+    },
+    editButton: {
+      color: theme.primary,
+    },
+    saveButton: {
+      backgroundColor: theme.primary,
+    },
+    preferenceText: {
+      color: theme.text,
+    },
+    aboutText: {
+      color: theme.secondaryText,
+    },
+  };
+
   return (
     <ScrollView style={[
       styles.container,
+      dynamicStyles.container,
       {
         paddingBottom: insets.bottom,
         paddingLeft: insets.left,
         paddingRight: insets.right,
       },
     ]}>
-      <View style={styles.profileHeader}>
+      <View style={[styles.profileHeader, dynamicStyles.profileHeader]}>
         <View style={styles.avatarContainer}>
           <Text style={styles.avatarText}>{profile.name ? profile.name.charAt(0).toUpperCase() : '?'}</Text>
         </View>
-        <Text style={styles.profileName}>{profile.name || 'İsim belirtilmedi'}</Text>
+        <Text style={[styles.profileName, dynamicStyles.profileName]}>{profile.name || 'İsim belirtilmedi'}</Text>
       </View>
 
-      <View style={styles.section}>
+      <View style={[styles.section, dynamicStyles.section]}>
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Kişisel Bilgiler</Text>
+          <Text style={[styles.sectionTitle, dynamicStyles.sectionTitle]}>Kişisel Bilgiler</Text>
           <TouchableOpacity onPress={() => setIsEditing(!isEditing)}>
-            <Text style={styles.editButton}>{isEditing ? 'İptal' : 'Düzenle'}</Text>
+            <Text style={[styles.editButton, dynamicStyles.editButton]}>{isEditing ? 'İptal' : 'Düzenle'}</Text>
           </TouchableOpacity>
         </View>
 
         <View style={styles.inputContainer}>
-          <Text style={styles.inputLabel}>Ad Soyad</Text>
+          <Text style={[styles.inputLabel, dynamicStyles.inputLabel]}>Ad Soyad</Text>
           <TextInput 
-            style={[styles.input, !isEditing && styles.inputDisabled]}
+            style={[
+              styles.input, 
+              dynamicStyles.input,
+              !isEditing && dynamicStyles.inputDisabled
+            ]}
             value={profile.name}
             onChangeText={(text) => setProfile({...profile, name: text})}
             placeholder="Adınızı girin"
+            placeholderTextColor={theme.secondaryText}
             editable={isEditing}
           />
         </View>
 
         <View style={styles.inputContainer}>
-          <Text style={styles.inputLabel}>E-posta</Text>
+          <Text style={[styles.inputLabel, dynamicStyles.inputLabel]}>E-posta</Text>
           <TextInput 
-            style={[styles.input, !isEditing && styles.inputDisabled]}
+            style={[
+              styles.input, 
+              dynamicStyles.input,
+              !isEditing && dynamicStyles.inputDisabled
+            ]}
             value={profile.email}
             onChangeText={(text) => setProfile({...profile, email: text})}
             placeholder="E-posta adresinizi girin"
+            placeholderTextColor={theme.secondaryText}
             editable={isEditing}
             keyboardType="email-address"
           />
         </View>
 
         <View style={styles.inputContainer}>
-          <Text style={styles.inputLabel}>Telefon</Text>
+          <Text style={[styles.inputLabel, dynamicStyles.inputLabel]}>Telefon</Text>
           <TextInput 
-            style={[styles.input, !isEditing && styles.inputDisabled]}
+            style={[
+              styles.input, 
+              dynamicStyles.input,
+              !isEditing && dynamicStyles.inputDisabled
+            ]}
             value={profile.phone}
             onChangeText={(text) => setProfile({...profile, phone: text})}
             placeholder="Telefon numaranızı girin"
+            placeholderTextColor={theme.secondaryText}
             editable={isEditing}
             keyboardType="phone-pad"
           />
         </View>
 
         <View style={styles.inputContainer}>
-          <Text style={styles.inputLabel}>Adres</Text>
+          <Text style={[styles.inputLabel, dynamicStyles.inputLabel]}>Adres</Text>
           <TextInput 
-            style={[styles.input, !isEditing && styles.inputDisabled, styles.textArea]}
+            style={[
+              styles.input, 
+              dynamicStyles.input,
+              !isEditing && dynamicStyles.inputDisabled,
+              styles.textArea
+            ]}
             value={profile.address}
             onChangeText={(text) => setProfile({...profile, address: text})}
             placeholder="Adresinizi girin"
+            placeholderTextColor={theme.secondaryText}
             editable={isEditing}
             multiline
             numberOfLines={3}
@@ -156,40 +227,43 @@ export default function ProfileScreen() {
         </View>
 
         {isEditing && (
-          <TouchableOpacity style={styles.saveButton} onPress={saveProfile}>
+          <TouchableOpacity 
+            style={[styles.saveButton, dynamicStyles.saveButton]} 
+            onPress={saveProfile}
+          >
             <Text style={styles.saveButtonText}>Kaydet</Text>
           </TouchableOpacity>
         )}
       </View>
 
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Tercihler</Text>
+      <View style={[styles.section, dynamicStyles.section]}>
+        <Text style={[styles.sectionTitle, dynamicStyles.sectionTitle]}>Tercihler</Text>
         
         <View style={styles.preferenceItem}>
-          <Text style={styles.preferenceText}>Bildirimler</Text>
+          <Text style={[styles.preferenceText, dynamicStyles.preferenceText]}>Bildirimler</Text>
           <TouchableOpacity 
             style={[styles.toggle, profile.preferences.notifications && styles.toggleActive]}
-            onPress={() => togglePreference('notifications')}
+            onPress={toggleNotifications}
           >
             <View style={[styles.toggleCircle, profile.preferences.notifications && styles.toggleCircleActive]} />
           </TouchableOpacity>
         </View>
 
         <View style={styles.preferenceItem}>
-          <Text style={styles.preferenceText}>Karanlık Mod</Text>
+          <Text style={[styles.preferenceText, dynamicStyles.preferenceText]}>Karanlık Mod</Text>
           <TouchableOpacity 
-            style={[styles.toggle, profile.preferences.darkMode && styles.toggleActive]}
-            onPress={() => togglePreference('darkMode')}
+            style={[styles.toggle, isDark && styles.toggleActive]}
+            onPress={toggleTheme}
           >
-            <View style={[styles.toggleCircle, profile.preferences.darkMode && styles.toggleCircleActive]} />
+            <View style={[styles.toggleCircle, isDark && styles.toggleCircleActive]} />
           </TouchableOpacity>
         </View>
       </View>
 
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Uygulama Hakkında</Text>
-        <Text style={styles.aboutText}>Shopping List App v1.0</Text>
-        <Text style={styles.aboutText}>Bu uygulama React Native ile geliştirilmiştir.</Text>
+      <View style={[styles.section, dynamicStyles.section]}>
+        <Text style={[styles.sectionTitle, dynamicStyles.sectionTitle]}>Uygulama Hakkında</Text>
+        <Text style={[styles.aboutText, dynamicStyles.aboutText]}>Shopping List App v1.0</Text>
+        <Text style={[styles.aboutText, dynamicStyles.aboutText]}>Bu uygulama React Native ile geliştirilmiştir.</Text>
       </View>
     </ScrollView>
   );
@@ -198,7 +272,6 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
   },
   centered: {
     justifyContent: 'center',
@@ -207,7 +280,6 @@ const styles = StyleSheet.create({
   profileHeader: {
     alignItems: 'center',
     padding: 20,
-    backgroundColor: 'white',
     marginBottom: 10,
   },
   avatarContainer: {
@@ -229,7 +301,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   section: {
-    backgroundColor: 'white',
     marginBottom: 15,
     padding: 15,
     borderRadius: 5,
@@ -246,7 +317,6 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   editButton: {
-    color: '#007bff',
     fontSize: 16,
   },
   inputContainer: {
@@ -254,28 +324,20 @@ const styles = StyleSheet.create({
   },
   inputLabel: {
     fontSize: 14,
-    color: '#666',
     marginBottom: 5,
   },
   input: {
     borderWidth: 1,
-    borderColor: '#ddd',
     borderRadius: 5,
     paddingHorizontal: 10,
     paddingVertical: 8,
     fontSize: 16,
-    backgroundColor: 'white',
-  },
-  inputDisabled: {
-    backgroundColor: '#f9f9f9',
-    color: '#555',
   },
   textArea: {
     minHeight: 80,
     textAlignVertical: 'top',
   },
   saveButton: {
-    backgroundColor: '#007bff',
     paddingVertical: 12,
     borderRadius: 5,
     alignItems: 'center',
@@ -318,7 +380,6 @@ const styles = StyleSheet.create({
   },
   aboutText: {
     fontSize: 14,
-    color: '#666',
     marginBottom: 5,
   },
 });

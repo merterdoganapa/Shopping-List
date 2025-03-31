@@ -1,7 +1,9 @@
+// app/index.tsx
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, TextInput, TouchableOpacity, FlatList, Alert } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useTheme } from '../../context/ThemeContext';
 
 // Alışveriş öğesi için bir tip tanımlayalım
 type ShoppingItem = {
@@ -15,6 +17,7 @@ const STORAGE_KEY = '@shopping_list_items';
 
 export default function ShoppingListScreen() {
   const insets = useSafeAreaInsets();
+  const { theme } = useTheme();
   const [item, setItem] = useState('');
   const [shoppingList, setShoppingList] = useState<ShoppingItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -92,8 +95,12 @@ export default function ShoppingListScreen() {
 
   if (isLoading) {
     return (
-      <View style={[styles.container, styles.centered]}>
-        <Text>Yükleniyor...</Text>
+      <View style={[
+        styles.container, 
+        styles.centered,
+        { backgroundColor: theme.background }
+      ]}>
+        <Text style={{ color: theme.text }}>Yükleniyor...</Text>
       </View>
     );
   }
@@ -101,21 +108,29 @@ export default function ShoppingListScreen() {
   return (
     <View style={[
       styles.container,
-      {
-        // insets.top değerini kullanmıyoruz çünkü header var
-        paddingBottom: insets.bottom,
-        paddingLeft: insets.left,
-        paddingRight: insets.right
+      { 
+        backgroundColor: theme.background
       }
     ]}>
       <View style={styles.inputContainer}>
         <TextInput 
-          style={styles.input}
+          style={[
+            styles.input,
+            { 
+              backgroundColor: theme.inputBackground,
+              borderColor: theme.border,
+              color: theme.inputText
+            }
+          ]}
           placeholder="Ürün ekle..."
+          placeholderTextColor={theme.secondaryText}
           value={item}
           onChangeText={setItem}
         />
-        <TouchableOpacity onPress={addItem} style={styles.addButton}>
+        <TouchableOpacity 
+          onPress={addItem} 
+          style={[styles.addButton, { backgroundColor: theme.primary }]}
+        >
           <Text style={styles.addButtonText}>Ekle</Text>
         </TouchableOpacity>
       </View>
@@ -128,21 +143,35 @@ export default function ShoppingListScreen() {
             onPress={() => toggleItemCompletion(item.id)}
             onLongPress={() => deleteItem(item.id)}
           >
-            <View style={styles.listItem}>
+            <View style={[
+              styles.listItem, 
+              { 
+                backgroundColor: theme.card,
+                borderLeftColor: theme.primary,
+                borderBottomColor: theme.border
+              }
+            ]}>
               <Text style={[
                 styles.itemText,
+                { color: theme.text },
                 item.completed && styles.completedItem
               ]}>
                 {item.name}
               </Text>
-              {item.completed && <Text style={styles.checkmark}>✓</Text>}
+              {item.completed && (
+                <Text style={styles.checkmark}>✓</Text>
+              )}
             </View>
           </TouchableOpacity>
         )}
         ListEmptyComponent={
           <View style={styles.emptyList}>
-            <Text style={styles.emptyText}>Alışveriş listeniz boş</Text>
-            <Text style={styles.emptySubText}>Yeni ürün eklemek için yukarıdaki alanı kullanın</Text>
+            <Text style={[styles.emptyText, { color: theme.secondaryText }]}>
+              Alışveriş listeniz boş
+            </Text>
+            <Text style={[styles.emptySubText, { color: theme.secondaryText }]}>
+              Yeni ürün eklemek için yukarıdaki alanı kullanın
+            </Text>
           </View>
         }
       />
@@ -153,8 +182,8 @@ export default function ShoppingListScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
-    backgroundColor: '#f5f5f5',
+    paddingTop: 30,
+    paddingHorizontal: 10,
   },
   centered: {
     justifyContent: 'center',
@@ -167,15 +196,12 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     borderWidth: 1,
-    borderColor: '#ccc',
     paddingHorizontal: 10,
     paddingVertical: 8,
     borderRadius: 5,
     marginRight: 10,
-    backgroundColor: 'white',
   },
   addButton: {
-    backgroundColor: '#007bff',
     paddingVertical: 10,
     paddingHorizontal: 15,
     borderRadius: 5,
@@ -186,12 +212,10 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   listItem: {
-    backgroundColor: 'white',
     padding: 15,
     borderRadius: 5,
     marginBottom: 10,
     borderLeftWidth: 5,
-    borderLeftColor: '#007bff',
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -216,11 +240,9 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#888',
   },
   emptySubText: {
     fontSize: 14,
-    color: '#888',
     marginTop: 10,
   },
 });
