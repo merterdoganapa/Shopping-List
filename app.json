@@ -36,6 +36,21 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "12174040-fefa-4b45-ae1a-db3235e71de7"
+      }
+    },
+    "owner": "merterdoganapa",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/12174040-fefa-4b45-ae1a-db3235e71de7"
     }
   }
 }
