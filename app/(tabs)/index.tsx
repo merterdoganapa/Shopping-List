@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, TextInput, TouchableOpacity, FlatList, Alert } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Alışveriş öğesi için bir tip tanımlayalım
 type ShoppingItem = {
@@ -9,10 +10,52 @@ type ShoppingItem = {
   completed: boolean;
 };
 
+// Storage için kullanacağımız anahtar
+const STORAGE_KEY = '@shopping_list_items';
+
 export default function ShoppingListScreen() {
   const insets = useSafeAreaInsets();
   const [item, setItem] = useState('');
   const [shoppingList, setShoppingList] = useState<ShoppingItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Uygulama başlatıldığında verileri getir
+  useEffect(() => {
+    loadShoppingList();
+  }, []);
+
+  // Alışveriş listesi değiştiğinde kaydet
+  useEffect(() => {
+    if (!isLoading) {
+      saveShoppingList();
+    }
+  }, [shoppingList]);
+
+  // AsyncStorage'dan verileri yükle
+  const loadShoppingList = async () => {
+    try {
+      const jsonValue = await AsyncStorage.getItem(STORAGE_KEY);
+      if (jsonValue != null) {
+        setShoppingList(JSON.parse(jsonValue));
+      }
+    } catch (error) {
+      console.error('Veriler yüklenirken hata oluştu:', error);
+      Alert.alert('Hata', 'Alışveriş listesi yüklenirken bir sorun oluştu.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // AsyncStorage'a verileri kaydet
+  const saveShoppingList = async () => {
+    try {
+      const jsonValue = JSON.stringify(shoppingList);
+      await AsyncStorage.setItem(STORAGE_KEY, jsonValue);
+    } catch (error) {
+      console.error('Veriler kaydedilirken hata oluştu:', error);
+      Alert.alert('Hata', 'Alışveriş listesi kaydedilirken bir sorun oluştu.');
+    }
+  };
 
   const addItem = () => {
     if (item.trim().length > 0) {
@@ -46,6 +89,14 @@ export default function ShoppingListScreen() {
       )
     );
   };
+
+  if (isLoading) {
+    return (
+      <View style={[styles.container, styles.centered]}>
+        <Text>Yükleniyor...</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={[
@@ -104,6 +155,10 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 20,
     backgroundColor: '#f5f5f5',
+  },
+  centered: {
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   inputContainer: {
     flexDirection: 'row',
